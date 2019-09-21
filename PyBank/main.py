@@ -17,3 +17,5 @@
 # Greatest Decrease in Profits: Sep-2013 ($-2196167)
 # In addition, your final script should both print the analysis to the terminal and export a text file with the results.
 
+if __name__ == '__main__':
+    #Call function to get things started.
