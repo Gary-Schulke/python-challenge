@@ -23,7 +23,11 @@ import numpy as np
 
 DATE = 0
 PROFIT = 1
+NL = "\n"
 
+#This is primary function of this program.
+#It opens and reads the file.
+#Calls the function "processRow()" to get the information from each line.
 def openWithCSV(file_path, data):
 #file_path - relative path to the data file.
 #data - the dictionary created in main
@@ -42,7 +46,8 @@ def openWithCSV(file_path, data):
         for row in csv_reader:
             processRow(row, data)
 
-
+#Sets default values and read values from the first line data.
+#No math to do here.
 def setFirstData(firstRow, data):
    #firstRow - The first n0n-header row of data read from the file.
    #data - The dictionary used to store running results.
@@ -53,7 +58,7 @@ def setFirstData(firstRow, data):
     data["BIGGESTPROFIT"] = {firstRow[DATE]:0}
     data["BIGGESTLOSS"] = {firstRow[DATE]:0}   
 
-
+#Extracts the data from each row and keeps the running totals.
 def processRow(aRow, data):
    #aRow - One row of the file separated into a list.
    #data - The dictionary used to store running results.
@@ -64,6 +69,7 @@ def processRow(aRow, data):
     data["RUNNINGCHANGE"] += month_change
 
     #Tracking the biggest profit and loss takes a little logic.
+    #Gains and Losses values are replaced when its current value is exceeded.
     if(month_change > 0):
         #There was an increase in profit.
         tempDict = {}
@@ -86,35 +92,49 @@ def processRow(aRow, data):
     #Save for the next look.       
     data["PREVIOUSPROFIT"] = profit
 
-def createResultsString(data):
+def createResultsList(data):
     #data - The acquired data after the file has been read.
+    #returns a list of strings formatted as required.
     #Compose the results into a formatted output
-
-    header = "\nFinancial Analysis\n" + \
-            "-----------------------------------------\n"
-    total_months = "Total Months: " + str(data['TOTALMONTHS']) + "\n"
-    total =  "Total: " + str(data["NETTOTAL"]) + "\n"
-    average_change = "Average Change: "  
-    #Need numpy to get correct division.
-    average_change = average_change + "%.2f" % (np.divide(data["RUNNINGCHANGE"], (data["TOTALMONTHS"] - 1))) + "\n"
+    results_list = []
+    spacer = "-----------------------------------------"
+    results_list.append("Financial Analysis")
+    results_list.append(spacer)
+    results_list.append("Total Months: " + str(data['TOTALMONTHS']))
+    results_list.append("Total: " + str(data["NETTOTAL"])) 
+    results_list.append("Average Change: " + "%.2f" % (np.divide(data["RUNNINGCHANGE"], (data["TOTALMONTHS"] - 1))))
+ 
     increase = "Greatest Increase in Profits: "
     for key, value in data["BIGGESTPROFIT"].items():
-        increase = increase + key + " ($" + str(value) + ")\n" 
+        increase = increase + key + " ($" + str(value) + ")" 
+    results_list.append(increase)
+
     decrease = "Greatest Decrease in Profits: "
     for key, value in data["BIGGESTLOSS"].items():
-        decrease = decrease + key + " ($" + str(value) + ")\n" 
-    return (header + total_months + total + average_change + increase + decrease)
+        decrease = decrease + key + " ($" + str(value) + ")" 
+    results_list.append(decrease)
 
-def printToConsole(output_string):
-        print(output_string)   
+    return results_list
 
-def writeToFile(file_path, output_string):
+#Prints the results to the console.
+#The newline is added by the print function.
+def printToConsole(results_list):
+    print()
+    for each in results_list:
+        print(each)   
+
+#Writes the results to a file.
+#Strange that Python doesnt have a writeline() function to 
+#automatically add the newline.
+def writeToFile(file_path, results_list):
     #Path and file name.  Subdirectories must exist if in path.
     with open(file_path, 'w') as txt_file:
-        txt_file.write(output_string)
+        for each in results_list:
+            txt_file.write(each)
+            txt_file.write(NL)
 
-if __name__ == '__main__':
-    #Create a dictionary to pass to functions and hold the running data.
+def main():
+   #Create a dictionary to pass to functions and hold the running data.
     dataSummary = {"DATE": 0,
             "PROFIT": 1,
             "NETTOTAL": 0,
@@ -128,9 +148,12 @@ if __name__ == '__main__':
     openWithCSV(file_path, dataSummary )
 
     #The file has been read and processed.  Write the results.
-    results_string = createResultsString(dataSummary)
-    printToConsole(results_string)
+    results_list = createResultsList(dataSummary)
+    printToConsole(results_list)
     
     file_path = os.path.join("budget_results.txt")
-    writeToFile(file_path, results_string)
+    writeToFile(file_path, results_list)
+
+if __name__ == '__main__':
+    main()
 
